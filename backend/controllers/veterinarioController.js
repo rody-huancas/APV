@@ -81,7 +81,7 @@ const autenticar = async (req, res) => {
             token: generarJWT(usuario.id)
         });
     } else {
-        const error = new Error("El password es incorrecto");
+        const error = new Error("La contraseña es incorrecta");
         return res.status(403).json({ msg: error.message });
     }
 };
@@ -176,6 +176,30 @@ const actualizarPerfil = async (req, res) => {
     }
 }
 
+const actualizarPassword = async (req, res) => {
+    // leer los datos
+    const { id } = req.veterinario;
+    const { pwd_actual, pwd_nuevo } = req.body;
+
+    // comprobar que el veterinario
+    const veterinario = await Veterinario.findById(id);
+    if (!veterinario) {
+        const error = new Error("Hubo un error");
+        return res.status(404).json({ msg: error.message });
+    }
+    // comprobar su password
+    if (await veterinario.comprobarPassword(pwd_actual)) {
+        // almacenar el nuevo password
+        veterinario.password = pwd_nuevo;
+        await veterinario.save();
+        res.json({ msg: "Contraseña actualizada correctamente" })
+    } else {
+        const error = new Error("La contraseña actual es incorrecta");
+        return res.status(404).json({ msg: error.message });
+    }
+
+}
+
 export {
     registrar,
     perfil,
@@ -184,5 +208,6 @@ export {
     olvidePassword,
     comprobarToken,
     nuevoPassword,
-    actualizarPerfil
+    actualizarPerfil,
+    actualizarPassword
 };
